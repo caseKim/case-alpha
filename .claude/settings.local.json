@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npx create-vite@latest . --template react)",
+      "Bash(npx create-vite@latest /tmp/vite-temp --template react)",
+      "Bash(cp -r /tmp/vite-temp/. /Users/ace/Dev/case-alpha/)",
+      "Bash(rm -rf /tmp/vite-temp)",
+      "Bash(cp -r /Users/ace/Dev/case-alpha/tmp/vite-temp/. /Users/ace/Dev/case-alpha/)",
+      "Bash(rm -rf /Users/ace/Dev/case-alpha/tmp)",
+      "Bash(npm install:*)"
+    ]
+  }
+}
