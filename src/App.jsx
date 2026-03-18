@@ -13,12 +13,14 @@ function App() {
   const [nearMissCount, setNearMissCount] = useState(0)
   const [gauge, setGauge] = useState(0)
   const [combo, setCombo] = useState(0)
+  const [clickMark, setClickMark] = useState(null)
   const [onCooldown, setOnCooldown] = useState(false)
   const [remainingClicks, setRemainingClicks] = useState(10)
   const direction = useRef(1)
   const timeRef = useRef(10)
   const feedbackTimer = useRef(null)
   const cooldownTimer = useRef(null)
+  const clickMarkId = useRef(0)
 
   function startGame() {
     setScore(0)
@@ -98,6 +100,7 @@ function App() {
       <div className="gauge-track">
         <div className="gauge-zone-good" />
         <div className="gauge-zone-perfect" />
+        {clickMark && <div key={clickMark.id} className="gauge-click-mark" style={{ left: `${clickMark.pos}%` }} />}
         <div
           className={`gauge-indicator${gauge >= 40 && gauge <= 60 ? ' in-perfect' : gauge >= 25 && gauge <= 75 ? ' in-good' : ''}`}
           style={{ left: `${gauge}%` }}
@@ -113,6 +116,7 @@ function App() {
         className={`click-btn${onCooldown ? ' cooldown' : ''}`}
         onClick={e => {
           if (onCooldown) return
+          setClickMark({ pos: gauge, id: ++clickMarkId.current })
           const left = remainingClicks - 1
           setRemainingClicks(left)
           const timing = gauge >= 40 && gauge <= 60 ? 'perfect'
