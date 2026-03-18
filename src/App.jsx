@@ -8,15 +8,19 @@ function App() {
   const [feedback, setFeedback] = useState(null)
   const [hadJackpot, setHadJackpot] = useState(false)
   const [perfectCount, setPerfectCount] = useState(0)
+  const [nearMissCount, setNearMissCount] = useState(0)
   const [gauge, setGauge] = useState(0)
   const direction = useRef(1)
+  const timeRef = useRef(10)
   const feedbackTimer = useRef(null)
 
   function startGame() {
     setScore(0)
     setTime(10)
+    timeRef.current = 10
     setHadJackpot(false)
     setPerfectCount(0)
+    setNearMissCount(0)
     direction.current = 1
     setPhase('playing')
   }
@@ -42,7 +46,8 @@ function App() {
     if (phase !== 'playing') return
     const interval = setInterval(() => {
       setGauge(g => {
-        const next = g + direction.current
+        const speed = 1 + (10 - timeRef.current) * 0.2
+        const next = g + direction.current * speed
         if (next >= 100 || next <= 0) direction.current *= -1
         return Math.min(100, Math.max(0, next))
       })
@@ -50,6 +55,7 @@ function App() {
     return () => clearInterval(interval)
   }, [phase])
 
+  useEffect(() => { timeRef.current = time }, [time])
   useEffect(() => () => clearTimeout(feedbackTimer.current), [])
 
   if (phase === 'start') {
@@ -63,7 +69,7 @@ function App() {
   }
 
   if (phase === 'result') {
-    const timingMessage = perfectCount >= 5 ? '타이밍 감각 좋다 🔥' : perfectCount === 0 ? '조금만 더 맞춰보자' : null
+    const timingMessage = perfectCount >= 5 ? '타이밍 감각 미쳤다 🔥' : nearMissCount >= 5 ? '조금만 더 맞췄으면 대박인데!' : perfectCount === 0 ? '조금만 더 맞춰보자' : null
     const message = timingMessage ?? (score >= 100 ? '오늘 미쳤다 🔥' : score >= 50 ? '오… 운 좋은데요?' : score >= 20 ? '괜찮은데요?' : '오늘 운이 별로네요 😅')
     return (
       <div className="game">
@@ -82,10 +88,13 @@ function App() {
       <div className="gauge-track">
         <div className="gauge-zone-good" />
         <div className="gauge-zone-perfect" />
-        <div className="gauge-indicator" style={{ left: `${gauge}%` }} />
+        <div
+          className={`gauge-indicator${gauge >= 45 && gauge <= 55 ? ' in-perfect' : gauge >= 35 && gauge <= 65 ? ' in-good' : ''}`}
+          style={{ left: `${gauge}%` }}
+        />
       </div>
       <p className="score">{score}</p>
-      {feedback && <p className={`feedback ${feedback.text === 'JACKPOT!' ? 'jackpot' : feedback.timing === 'perfect' ? 'perfect' : ''}`}>{feedback.text}</p>}
+      {feedback && <p className={`feedback ${feedback.isJackpot ? 'jackpot' : feedback.timing === 'perfect' ? 'perfect' : ''}`}>{feedback.text}</p>}
       <button
         className="click-btn"
         onClick={e => {
@@ -93,15 +102,21 @@ function App() {
                        : gauge >= 35 && gauge <= 65 ? 'good'
                        : 'normal'
           const r = Math.random()
-          const base = timing === 'perfect' ? (r < 0.10 ? 100 : r < 0.25 ? 20 : r < 0.55 ? 5 : 1)
-                     : timing === 'good'    ? (r < 0.03 ? 100 : r < 0.12 ? 20 : r < 0.40 ? 5 : 1)
-                     :                        (r < 0.01 ? 100 : r < 0.05 ? 20 : r < 0.30 ? 5 : 1)
+          const base = timing === 'perfect' ? (r < 0.18 ? 100 : r < 0.40 ? 20 : r < 0.70 ? 5 : 1)
+                     : timing === 'good'    ? (r < 0.04 ? 100 : r < 0.15 ? 20 : r < 0.45 ? 5 : 1)
+                     :                        (r < 0.008? 100 : r < 0.04 ? 20 : r < 0.25 ? 5 : 1)
           const isJackpot = base === 100
           setScore(s => s + base)
           if (isJackpot) setHadJackpot(true)
           if (timing === 'perfect') setPerfectCount(c => c + 1)
-          const label = isJackpot ? 'JACKPOT!' : `+${base}${timing === 'perfect' ? ' PERFECT' : timing === 'good' ? ' GOOD' : ''}`
-          setFeedback({ text: label, timing })
+          const nearMiss = timing !== 'perfect' && ((gauge >= 40 && gauge <= 44) || (gauge >= 56 && gauge <= 60))
+          if (nearMiss) setNearMissCount(c => c + 1)
+          const label = isJackpot            ? `JACKPOT! +${base}`
+                     : timing === 'perfect'  ? `🔥 PERFECT! +${base}`
+                     : nearMiss              ? `거의 맞았는데!! 😭 +${base}`
+                     : timing === 'good'     ? `👍 GOOD +${base}`
+                     :                         `😅 +${base}`
+          setFeedback({ text: label, timing, isJackpot })
           clearTimeout(feedbackTimer.current)
           feedbackTimer.current = setTimeout(() => setFeedback(null), isJackpot || timing === 'perfect' ? 1000 : 600)
           const cls = isJackpot ? 'jackpot-pop' : timing === 'perfect' ? 'perfect-pop' : 'pop'
