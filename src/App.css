@@ -131,6 +131,21 @@ button:hover {
   animation: pop 0.15s ease;
 }
 
+@keyframes perfect-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.click-btn.perfect-pop {
+  animation: perfect-pop 0.25s ease;
+}
+
+.feedback.perfect {
+  font-size: 2rem;
+  color: #f0c040;
+}
+
 @keyframes jackpot-pop {
   0%   { transform: scale(1); }
   40%  { transform: scale(1.4); }
