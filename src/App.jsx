@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
 const calcMultiplier = c => 1 + Math.floor(c / 3) * 0.5
+const getZone = g =>
+  g >= 45 && g <= 55 ? 'perfect' :
+  g >= 38 && g <= 62 ? 'great' :
+  g >= 27 && g <= 73 ? 'good' :
+  g >= 18 && g <= 82 ? 'ok' : 'miss'
 
 function App() {
   const [phase, setPhase] = useState('start') // 'start' | 'playing' | 'result'
@@ -15,7 +20,7 @@ function App() {
   const [combo, setCombo] = useState(0)
   const [clickMark, setClickMark] = useState(null)
   const [onCooldown, setOnCooldown] = useState(false)
-  const [remainingClicks, setRemainingClicks] = useState(10)
+  const [remainingClicks, setRemainingClicks] = useState(15)
   const direction = useRef(1)
   const timeRef = useRef(10)
   const feedbackTimer = useRef(null)
@@ -24,14 +29,14 @@ function App() {
 
   function startGame() {
     setScore(0)
-    setTime(10)
-    timeRef.current = 10
+    setTime(15)
+    timeRef.current = 15
     setHadJackpot(false)
     setPerfectCount(0)
     setNearMissCount(0)
     setCombo(0)
     setOnCooldown(false)
-    setRemainingClicks(10)
+    setRemainingClicks(15)
     clearTimeout(cooldownTimer.current)
     direction.current = 1
     setPhase('playing')
@@ -58,7 +63,7 @@ function App() {
     if (phase !== 'playing') return
     const interval = setInterval(() => {
       setGauge(g => {
-        const speed = 1 + (10 - timeRef.current) * 0.12
+        const speed = 1 + (15 - timeRef.current) * 0.12
         const next = g + direction.current * speed
         if (next >= 100 || next <= 0) direction.current *= -1
         return Math.min(100, Math.max(0, next))
@@ -94,15 +99,22 @@ function App() {
     )
   }
 
+  const indicatorZone = getZone(gauge)
+
   return (
     <div className="game">
       <p className="timer">{time}s</p>
       <div className="gauge-track">
-        <div className="gauge-zone-good" />
+        <div className="gauge-zone-ok-left" />
+        <div className="gauge-zone-ok-right" />
+        <div className="gauge-zone-good-left" />
+        <div className="gauge-zone-good-right" />
+        <div className="gauge-zone-great-left" />
+        <div className="gauge-zone-great-right" />
         <div className="gauge-zone-perfect" />
         {clickMark && <div key={clickMark.id} className="gauge-click-mark" style={{ left: `${clickMark.pos}%` }} />}
         <div
-          className={`gauge-indicator${gauge >= 40 && gauge <= 60 ? ' in-perfect' : gauge >= 25 && gauge <= 75 ? ' in-good' : ''}`}
+          className={`gauge-indicator${indicatorZone !== 'miss' ? ` in-${indicatorZone}` : ''}`}
           style={{ left: `${gauge}%` }}
         />
       </div>
@@ -119,29 +131,31 @@ function App() {
           setClickMark({ pos: gauge, id: ++clickMarkId.current })
           const left = remainingClicks - 1
           setRemainingClicks(left)
-          const timing = gauge >= 40 && gauge <= 60 ? 'perfect'
-                       : gauge >= 25 && gauge <= 75 ? 'good'
-                       : 'normal'
-          const newCombo = timing === 'normal' ? 0 : combo + 1
+          const timing = getZone(gauge)
+          const newCombo = timing === 'miss' ? 0 : combo + 1
           setCombo(newCombo)
           const multiplier = calcMultiplier(newCombo)
           const r = Math.random()
           const base = timing === 'perfect' ? (r < 0.35 ? 100 : r < 0.65 ? 20 : r < 0.90 ? 5 : 1)
+                     : timing === 'great'   ? (r < 0.15 ? 100 : r < 0.45 ? 20 : r < 0.80 ? 5 : 1)
                      : timing === 'good'    ? (r < 0.05 ? 100 : r < 0.20 ? 20 : r < 0.55 ? 5 : 1)
+                     : timing === 'ok'      ? (r < 0.01 ? 20  : r < 0.40 ? 5  : 1)
                      :                        -1
           const points = base < 0 ? base : Math.round(base * multiplier)
           const isJackpot = base === 100
           setScore(s => s + points)
           if (isJackpot) setHadJackpot(true)
           if (timing === 'perfect') setPerfectCount(c => c + 1)
-          const nearMiss = timing !== 'perfect' && ((gauge >= 35 && gauge <= 39) || (gauge >= 61 && gauge <= 65))
+          const nearMiss = timing === 'great' && ((gauge >= 38 && gauge <= 44) || (gauge >= 56 && gauge <= 62))
           if (nearMiss) setNearMissCount(c => c + 1)
           if (left === 0) { setPhase('result'); return }
           const comboTag = newCombo >= 3 ? ` x${multiplier.toFixed(1)}` : ''
           const label = isJackpot            ? `JACKPOT! +${points}`
                      : timing === 'perfect'  ? `🔥 PERFECT! +${points}${comboTag}`
                      : nearMiss              ? `거의 맞았는데!! 😭 +${points}`
+                     : timing === 'great'    ? `⚡ GREAT! +${points}${comboTag}`
                      : timing === 'good'     ? `👍 GOOD +${points}${comboTag}`
+                     : timing === 'ok'       ? `👌 OK +${points}`
                      :                         `😅 ${points}`
           setFeedback({ text: label, timing, isJackpot })
           clearTimeout(feedbackTimer.current)

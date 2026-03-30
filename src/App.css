@@ -17,22 +17,67 @@
   overflow: hidden;
 }
 
-.gauge-zone-good {
+.gauge-zone-ok-left {
   position: absolute;
-  left: 25%;
-  width: 50%;
+  left: 18%;
+  width: 9%;
+  height: 100%;
+  background: #4488cc;
+  opacity: 0.35;
+}
+
+.gauge-zone-ok-right {
+  position: absolute;
+  left: 73%;
+  width: 9%;
+  height: 100%;
+  background: #4488cc;
+  opacity: 0.35;
+}
+
+.gauge-zone-good-left {
+  position: absolute;
+  left: 27%;
+  width: 11%;
   height: 100%;
   background: #4a8;
   opacity: 0.5;
 }
 
+.gauge-zone-good-right {
+  position: absolute;
+  left: 62%;
+  width: 11%;
+  height: 100%;
+  background: #4a8;
+  opacity: 0.5;
+}
+
+.gauge-zone-great-left {
+  position: absolute;
+  left: 38%;
+  width: 7%;
+  height: 100%;
+  background: #f08040;
+  opacity: 0.65;
+}
+
+.gauge-zone-great-right {
+  position: absolute;
+  left: 55%;
+  width: 7%;
+  height: 100%;
+  background: #f08040;
+  opacity: 0.65;
+}
+
 .gauge-zone-perfect {
   position: absolute;
-  left: 40%;
-  width: 20%;
+  left: 45%;
+  width: 10%;
   height: 100%;
   background: #f0c040;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .gauge-click-mark {
@@ -61,8 +106,17 @@
   transition: background 0.05s, box-shadow 0.05s;
 }
 
+.gauge-indicator.in-ok {
+  background: #4488cc;
+}
+
 .gauge-indicator.in-good {
   background: #4a8;
+}
+
+.gauge-indicator.in-great {
+  background: #f08040;
+  box-shadow: 0 0 6px #f08040;
 }
 
 .gauge-indicator.in-perfect {
